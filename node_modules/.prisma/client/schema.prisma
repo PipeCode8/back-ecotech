@@ -1,0 +1,99 @@
+// Esquema inicial de Prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Agrega tus modelos aquí
+
+model User {
+  id               Int                @id @default(autoincrement())
+  name             String
+  email            String             @unique
+  passwordHash     String
+  role             String // admin/client
+  avatar           String?
+  phone            String?
+  address          String?
+  points           Int                @default(0)
+  collections      Collection[]
+  purchases        Purchase[]
+  ecoPoints        EcoPointsHistory[]
+  devices          Device[]
+  solicitudes      Solicitud[]
+  userAchievements UserAchievement[]
+}
+
+model Collection {
+  id     Int      @id @default(autoincrement())
+  user   User     @relation(fields: [userId], references: [id])
+  userId Int
+  items  String
+  status String // pending/processing/collected
+  date   DateTime @default(now())
+  points Int      @default(0)
+}
+
+model Purchase {
+  id     Int      @id @default(autoincrement())
+  user   User     @relation(fields: [userId], references: [id])
+  userId Int
+  item   String
+  price  Float
+  points Int      @default(0)
+  date   DateTime @default(now())
+}
+
+model Device {
+  id      Int    @id @default(autoincrement())
+  name    String
+  type    String
+  status  String
+  owner   User?  @relation(fields: [ownerId], references: [id])
+  ownerId Int?
+}
+
+model EcoPointsHistory {
+  id     Int      @id @default(autoincrement())
+  user   User     @relation(fields: [userId], references: [id])
+  userId Int
+  change Int // positivo/negativo
+  reason String
+  date   DateTime @default(now())
+}
+
+model Solicitud {
+  id                  Int      @id @default(autoincrement())
+  user                User     @relation(fields: [userId], references: [id])
+  userId              Int
+  address             String
+  preferredDate       DateTime
+  preferredTime       String
+  specialInstructions String?
+  status              String   @default("pendiente")
+  items               Json
+}
+
+model Achievement {
+  id          Int               @id @default(autoincrement())
+  nombre      String
+  descripcion String
+  icono       String
+  criterio    Json
+  activo      Boolean           @default(true)
+  users       UserAchievement[]
+}
+
+model UserAchievement {
+  id            Int         @id @default(autoincrement())
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  achievementId Int
+  fechaObtenido DateTime    @default(now())
+}

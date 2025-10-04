@@ -104,15 +104,17 @@ export const resetPassword = async (req: Request, res: Response) => {
       },
     });
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('[resetPassword] Error al enviar el correo:', error);
-        return res.status(500).json({ error: 'Error al enviar el correo', details: error.message });
-      } else {
-        console.log('[resetPassword] Correo enviado:', info.response);
-        return res.json({ message: 'Correo enviado con éxito' });
-      }
-    });
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log('[resetPassword] Correo enviado a:', email);
+      return res.json({ message: 'Correo enviado con éxito' });
+    } catch (error) {
+      console.error('[resetPassword] Error al enviar el correo:', error);
+      const message = typeof error === 'object' && error !== null && 'message' in error
+        ? (error as { message: string }).message
+        : String(error);
+      return res.status(500).json({ error: 'Error al enviar el correo', details: message });
+    }
   } catch (err) {
     console.error('[resetPassword] Error inesperado:', err);
     const message = typeof err === 'object' && err !== null && 'message' in err
